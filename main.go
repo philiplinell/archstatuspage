@@ -92,7 +92,6 @@ func main() {
 	cmds = append(cmds, commands.NewSystemctlFailed())
 	cmds = append(cmds, commands.NewJournalctlErrors())
 	cmds = append(cmds, commands.NewCheckUpdates())
-	cmds = append(cmds, commands.NewYayUpdates())
 
 	for _, cmd := range cmds {
 		err := cmd.Run()
@@ -102,15 +101,6 @@ func main() {
 			continue
 		}
 	}
-
-	// // Run commands to collect system status
-	// status.FailedServices = commands.RunCommand("Failed Services", "systemctl", "--failed")
-	// status.JournalEntries = commands.RunCommand("Recent Journal Entries", "journalctl", "--boot", "--no-pager", "--lines=50")
-	// status.DiskUsage = commands.RunCommand("Disk Usage", "df", "--human-readable")
-	// status.MemoryUsage = commands.RunCommand("Memory Usage", "free", "--human")
-	// status.LoadAverage = commands.RunCommand("System Load", "uptime")
-	// status.NetworkStatus = commands.RunCommand("Network Status", "ip", "addr")
-	// status.PackageUpdates = commands.RunCommand("Available Package Updates", "checkupdates")
 
 	status.Cmds = cmds
 
