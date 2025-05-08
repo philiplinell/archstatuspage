@@ -61,6 +61,7 @@ func main() {
 	cmds = append(cmds, commands.NewSystemctlFailed())
 	cmds = append(cmds, commands.NewJournalctlErrors())
 	cmds = append(cmds, commands.NewCheckUpdates())
+	cmds = append(cmds, commands.NewYayUpdates())
 
 	for _, cmd := range cmds {
 		err := cmd.Run()
