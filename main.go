@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"embed"
+	"flag"
 	"fmt"
 	"html/template"
 	"log"
@@ -28,7 +29,37 @@ type SystemStatus struct {
 	LLMPrompt     string // Example prompt for LLMs like Claude
 }
 
+// setupLogger configures the global slog logger based on the provided log level
+func setupLogger(logLevelStr string) {
+	var level slog.Level
+	switch strings.ToLower(logLevelStr) {
+	case "debug":
+		level = slog.LevelDebug
+	case "info":
+		level = slog.LevelInfo
+	case "warn":
+		level = slog.LevelWarn
+	case "error":
+		level = slog.LevelError
+	default:
+		level = slog.LevelInfo
+	}
+
+	// Set up the logger
+	opts := &slog.HandlerOptions{Level: level}
+	handler := slog.NewTextHandler(os.Stderr, opts)
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+}
+
 func main() {
+	// Parse command line flags
+	logLevel := flag.String("log-level", "info", "Log level (debug, info, warn, error)")
+	flag.Parse()
+
+	// Configure logging
+	setupLogger(*logLevel)
+
 	// Create temporary directory for output
 	tmpDir := os.TempDir()
 	outputPath := filepath.Join(tmpDir, "system-status.html")
