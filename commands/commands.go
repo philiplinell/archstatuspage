@@ -11,6 +11,7 @@ type Command interface {
 	Failed() bool
 	Output() string
 	Run() error
+	Command() string
 }
 
 type Category string

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"embed"
 	"fmt"
 	"html/template"
@@ -9,12 +10,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/philiplinell/archstatuspage/commands"
 )
 
 //go:embed templates/dashboard.gohtml
+//go:embed templates/llm_prompt.tmpl
 var templateFS embed.FS
 
 type SystemStatus struct {
@@ -22,14 +25,7 @@ type SystemStatus struct {
 	Timestamp     string
 	KernelVersion string
 	Cmds          []commands.Command
-	// FailedServices commands.CommandResult
-	// JournalEntries commands.CommandResult
-	// DiskUsage      commands.CommandResult
-	// MemoryUsage    commands.CommandResult
-	// LoadAverage    commands.CommandResult
-	// NetworkStatus  commands.CommandResult
-	// PackageUpdates commands.CommandResult
-	LLMPrompt string // Example prompt for LLMs like Claude
+	LLMPrompt     string // Example prompt for LLMs like Claude
 }
 
 func main() {
@@ -57,7 +53,7 @@ func main() {
 		log.Printf("Warning: Failed to get kernel version: %v", err)
 		status.KernelVersion = "unknown"
 	} else {
-		status.KernelVersion = string(kernelOut)
+		status.KernelVersion = strings.TrimSpace(string(kernelOut))
 	}
 
 	cmds := []commands.Command{}
@@ -97,8 +93,15 @@ func main() {
 	}
 	defer outputFile.Close()
 
+	llmPromptIssues := []string{}
+	for _, cmd := range cmds {
+		if cmd.Failed() {
+			llmPromptIssues = append(llmPromptIssues, cmd.Output())
+		}
+	}
+
 	// Generate LLM prompt
-	status.LLMPrompt = generateLLMPrompt(status)
+	status.LLMPrompt = generateLLMPrompt(status.KernelVersion, llmPromptIssues)
 
 	// Execute template with system status data
 	err = tmpl.Execute(outputFile, status)
@@ -111,56 +114,26 @@ func main() {
 }
 
 // generateLLMPrompt creates an example prompt for an LLM based on the system status
-func generateLLMPrompt(status SystemStatus) string {
-	return ""
-	//	var problemDetails strings.Builder
-	//
-	//	// Add failed services if any
-	//	if status.FailedServices.Output != "" && status.FailedServices.Success {
-	//		problemDetails.WriteString("\nFailed services:\n```\n")
-	//		problemDetails.WriteString(status.FailedServices.Output)
-	//		problemDetails.WriteString("```\n")
-	//	}
-	//
-	//	// Add any errors from commands
-	//	for _, cmd := range []struct {
-	//		name   string
-	//		result commands.CommandResult
-	//	}{
-	//		{"Failed Services", status.FailedServices},
-	//		{"Package Updates", status.PackageUpdates},
-	//		{"Memory Usage", status.MemoryUsage},
-	//		{"Disk Usage", status.DiskUsage},
-	//		{"System Load", status.LoadAverage},
-	//		{"Network Status", status.NetworkStatus},
-	//	} {
-	//		if !cmd.result.Success {
-	//			problemDetails.WriteString(fmt.Sprintf("\nError running %s (%s):\n```\n%s\n```\n",
-	//				cmd.name, cmd.result.Command, cmd.result.Error))
-	//		}
-	//	}
-	//
-	//	// Add recent journal entries if they might contain errors
-	//	problemDetails.WriteString("\nRecent journal entries that might be relevant:\n```\n")
-	//	journalExcerpt := status.JournalEntries.Output
-	//	if len(journalExcerpt) > 1500 {
-	//		journalExcerpt = journalExcerpt[:1500] + "...[truncated]"
-	//	}
-	//	problemDetails.WriteString(journalExcerpt)
-	//	problemDetails.WriteString("```\n")
-	//
-	//	// Generate the full prompt
-	//	prompt := fmt.Sprintf(`I'm having an issue with my Arch Linux system (Kernel: %s).
-	//
-	// I ran a system health check on %s on host %s, and found the following issues:
-	// %s
-	//
-	// Could you help me diagnose these problems and suggest solutions? Please provide step-by-step instructions for resolving these issues.`,
-	//
-	//		strings.TrimSpace(status.KernelVersion),
-	//		status.Timestamp,
-	//		status.Hostname,
-	//		problemDetails.String())
-	//
-	//	return prompt
+func generateLLMPrompt(kernel string, issues []string) string {
+	type TmplData struct {
+		Kernel string
+		Issues []string
+	}
+
+	tmpl, err := template.ParseFS(templateFS, "templates/llm_prompt.tmpl")
+	if err != nil {
+		log.Fatalf("Error parsing template: %v", err)
+	}
+
+	buffer := &bytes.Buffer{}
+
+	err = tmpl.Execute(buffer, TmplData{
+		Kernel: kernel,
+		Issues: issues,
+	})
+	if err != nil {
+		log.Fatalf("Error executing template: %v", err)
+	}
+
+	return buffer.String()
 }

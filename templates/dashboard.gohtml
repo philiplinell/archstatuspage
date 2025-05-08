@@ -315,11 +315,18 @@
                     {{ end }}
                     </div>
                 {{end}}
-                {{ range .Info.WikiLinks }}
-                    <a href="{{.}}" class="wiki-link" target="_blank">
-                        📚 {{.}}
-                    </a>
-                {{end}}
+
+                {{ if .Info.WikiLinks }}
+                    <h3>Related Documentation</h3>
+                    <ul>
+                    {{ range .Info.WikiLinks }}
+                    <li><a href="{{.}}" class="wiki-link" target="_blank">
+                            📚 {{.}}
+                        </a>
+                    </li>
+                    {{end}}
+                    </ul>
+                {{ end }}
             </div>
         </div>
     {{ end }}
