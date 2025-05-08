@@ -59,6 +59,7 @@ func main() {
 	cmds := []commands.Command{}
 
 	cmds = append(cmds, commands.NewSystemctlFailed())
+	cmds = append(cmds, commands.NewJournalctlErrors())
 
 	for _, cmd := range cmds {
 		err := cmd.Run()
