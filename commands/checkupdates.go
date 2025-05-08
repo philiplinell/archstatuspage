@@ -61,13 +61,24 @@ func (c *CheckUpdates) Run() error {
 
 	err := cmd.Run()
 	if err != nil {
-		// checkupdates returns exit code 1 when there are no updates
-		// and exit code 2 when there's an error
-		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
-			c.output = "No package updates available"
-			return nil
+		// checkupdates returns:
+		// exit code 0: Normal exit condition (updates available)
+		// exit code 1: Unknown cause of failure
+		// exit code 2: No updates are available
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			if exitErr.ExitCode() == 2 {
+				// No updates available - not a failure
+				c.output = "No package updates available"
+				return nil
+			}
+			// Any other error code is a failure
+			c.failed = true
+			c.output = fmt.Sprintf("Error running checkupdates (code %d): %v", 
+				exitErr.ExitCode(), err)
+			return err
 		}
-
+		
+		// Generic error handling
 		c.failed = true
 		c.output = fmt.Sprintf("Error running checkupdates: %v", err)
 		return err
