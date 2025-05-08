@@ -67,7 +67,7 @@ func (c *CheckUpdates) Run() error {
 			c.output = "No package updates available"
 			return nil
 		}
-		
+
 		c.failed = true
 		c.output = fmt.Sprintf("Error running checkupdates: %v", err)
 		return err

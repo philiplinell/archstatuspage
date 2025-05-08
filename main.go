@@ -93,6 +93,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating output file: %v", err)
 	}
+	//nolint: errcheck
 	defer outputFile.Close()
 
 	llmPromptIssues := []string{}
