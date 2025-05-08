@@ -73,11 +73,11 @@ func (c *CheckUpdates) Run() error {
 			}
 			// Any other error code is a failure
 			c.failed = true
-			c.output = fmt.Sprintf("Error running checkupdates (code %d): %v", 
+			c.output = fmt.Sprintf("Error running checkupdates (code %d): %v",
 				exitErr.ExitCode(), err)
 			return err
 		}
-		
+
 		// Generic error handling
 		c.failed = true
 		c.output = fmt.Sprintf("Error running checkupdates: %v", err)
