@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Status: {{.Hostname}}</title>
+    <style>
+        :root {
+            --bg-color: #1a1b26;
+            --text-color: #a9b1d6;
+            --header-color: #7aa2f7;
+            --border-color: #414868;
+            --success-color: #9ece6a;
+            --error-color: #f7768e;
+            --warning-color: #e0af68;
+            --section-bg: #24283b;
+            --button-bg: #414868;
+            --button-hover: #565f89;
+        }
+        
+        body {
+            font-family: 'Cascadia Code', 'Source Code Pro', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        
+        header {
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        
+        header h1 {
+            color: var(--header-color);
+            margin: 0;
+        }
+        
+        .info-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            background-color: var(--section-bg);
+            padding: 10px;
+            border-radius: 4px;
+            flex-grow: 1;
+        }
+        
+        .info-item h3 {
+            margin-top: 0;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            color: var(--header-color);
+        }
+        
+        .info-item p {
+            margin: 0;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-card {
+            background-color: var(--section-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .status-card h2 {
+            margin: 0;
+            padding: 10px 15px;
+            background-color: rgba(0, 0, 0, 0.2);
+            font-size: 1.1em;
+            color: var(--header-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .status-card h2::after {
+            content: '▼';
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+        
+        .status-card.collapsed h2::after {
+            transform: rotate(-90deg);
+        }
+        
+        .command {
+            font-size: 0.8em;
+            color: var(--text-color);
+            opacity: 0.7;
+            margin-left: auto;
+            padding-right: 10px;
+        }
+        
+        .status-card.collapsed .status-content {
+            display: none;
+        }
+        
+        .status-content {
+            padding: 15px;
+            overflow: auto;
+            max-height: 400px;
+        }
+        
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: 'Cascadia Code', 'Source Code Pro', monospace;
+            font-size: 0.9em;
+        }
+
+       .wiki-link {
+            display: block;
+            margin-top: 10px;
+            color: var(--link-color);
+            font-size: 0.8em;
+            text-decoration: none;
+        }
+        
+        .wiki-link:hover {
+            text-decoration: underline;
+        } 
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-indicator.success {
+            background-color: var(--success-color);
+        }
+        
+        .status-indicator.error {
+            background-color: var(--error-color);
+        }
+        
+        .status-indicator.warning {
+            background-color: var(--warning-color);
+        }
+        
+        .success-message {
+            color: var(--success-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .error-message {
+            color: var(--error-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .warning-message {
+            color: var(--warning-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .llm-prompt-container {
+            margin-top: 30px;
+            background-color: var(--section-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .llm-prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        .llm-prompt-header h2 {
+            margin: 0;
+            font-size: 1.1em;
+            color: var(--header-color);
+        }
+        
+        .llm-prompt-header::after {
+            content: '▼';
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+        
+        .llm-prompt-container.collapsed .llm-prompt-header::after {
+            transform: rotate(-90deg);
+        }
+        
+        .llm-prompt-container.collapsed .llm-prompt-content {
+            display: none;
+        }
+        
+        .llm-prompt-content {
+            padding: 15px;
+            position: relative;
+        }
+        
+        .llm-prompt {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: 'Cascadia Code', 'Source Code Pro', monospace;
+            font-size: 0.9em;
+            margin: 0;
+        }
+        
+        .copy-button {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background-color: var(--button-bg);
+            border: none;
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Cascadia Code', 'Source Code Pro', monospace;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .copy-button:hover {
+            background-color: var(--button-hover);
+        }
+        
+        .copy-button.copied {
+            background-color: var(--success-color);
+            color: #1a1b26;
+        }
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.8em;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>System Status: {{.Hostname}}</h1>
+    </header>
+    
+    <div class="info-bar">
+        <div class="info-item">
+            <h3>Timestamp</h3>
+            <p>{{.Timestamp}}</p>
+        </div>
+        <div class="info-item">
+            <h3>Kernel</h3>
+            <p>{{.KernelVersion}}</p>
+        </div>
+    </div>
+    
+    {{ range .Cmds }}
+        <div class="status-card {{if not .Failed }}collapsed{{end}}">
+            <h2>
+                {{- if .Failed -}}
+                    <span class="status-indicator error"></span>
+                {{- else -}}
+                    <span class="status-indicator success"></span>
+                {{- end -}}
+                {{.Info.Title}}
+                <span class="command">{{.Command}}</span>
+            </h2>
+            <div class="status-content">
+                {{if .Failed}}
+                    <div class="error-message">
+                        <span>⚠️ Error executing command:</span>
+                    </div>
+                    {{ if .Output }}
+                        <pre>{{.Output}}</pre>
+                    {{ else }}
+                        <pre>Command gave no output</pre>
+                    {{ end }}
+                {{else}}
+                    <div class="success-message">
+                    <span>✓ </span>
+                    {{ if .Output }}
+                        <pre>{{.Output}}</pre>
+                    {{ else }}
+                        <pre>Command gave no output</pre>
+                    {{ end }}
+                    </div>
+                {{end}}
+                {{ range .Info.WikiLinks }}
+                    <a href="{{.}}" class="wiki-link" target="_blank">
+                        📚 {{.}}
+                    </a>
+                {{end}}
+            </div>
+        </div>
+    {{ end }}
+    
+    <!-- LLM Prompt Section -->
+    <div class="llm-prompt-container collapsed">
+        <div class="llm-prompt-header">
+            <h2>LLM Troubleshooting Prompt</h2>
+        </div>
+        <div class="llm-prompt-content">
+            <button class="copy-button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy
+            </button>
+            <pre class="llm-prompt">{{.LLMPrompt}}</pre>
+        </div>
+    </div>
+
+    <footer>
+        Generated by archstatuspage on {{.Timestamp}}
+    </footer>
+
+    <script>
+        // Toggle expandable sections
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all cards as expanded
+            const cards = document.querySelectorAll('.status-card');
+            cards.forEach(card => {
+                const header = card.querySelector('h2');
+                header.addEventListener('click', () => {
+                    card.classList.toggle('collapsed');
+                });
+            });
+
+            // Initialize LLM prompt section
+            const llmPromptContainer = document.querySelector('.llm-prompt-container');
+            const llmPromptHeader = llmPromptContainer.querySelector('.llm-prompt-header');
+            llmPromptHeader.addEventListener('click', () => {
+                llmPromptContainer.classList.toggle('collapsed');
+            });
+
+            // Copy button functionality
+            const copyButton = document.querySelector('.copy-button');
+            const promptText = document.querySelector('.llm-prompt').textContent;
+            
+            copyButton.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(promptText);
+                    copyButton.classList.add('copied');
+                    copyButton.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyButton.classList.remove('copied');
+                        copyButton.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

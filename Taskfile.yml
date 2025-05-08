@@ -1,0 +1,16 @@
+version: "3"
+
+tasks:
+  default:
+    cmsd: [task --list]
+    silent: true
+
+  clean:
+    desc: Remove executables
+    cmds: [rm -rf bin/]
+
+  build:
+    desc: Build executables
+    cmds:
+      - mkdir -p bin
+      - go build -o ./bin ./...
