@@ -2,9 +2,13 @@ I'm having an issue with my Arch Linux system (Kernel: {{ .Kernel }}).
 
 I ran a system health check and found the following issues:
 
+<issues>
 {{ range .Issues }}
- - {{ . }}
+<issue>
+{{ . }}
+</issue>
 {{ end }}
+</issues>
 
 Could you assist me in diagnosing these issues? I would appreciate step-by-step instructions on how to resolve each one, including any recommended commands or tools for further investigation.
 
