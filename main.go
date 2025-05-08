@@ -71,7 +71,7 @@ func main() {
 
 	// // Run commands to collect system status
 	// status.FailedServices = commands.RunCommand("Failed Services", "systemctl", "--failed")
-	// status.JournalEntries = commands.RunCommand("Recent Journal Entries", "journalctl", "-b", "--no-pager", "-n", "50")
+	// status.JournalEntries = commands.RunCommand("Recent Journal Entries", "journalctl", "--boot", "--no-pager", "--lines=50")
 	// status.DiskUsage = commands.RunCommand("Disk Usage", "df", "--human-readable")
 	// status.MemoryUsage = commands.RunCommand("Memory Usage", "free", "--human")
 	// status.LoadAverage = commands.RunCommand("System Load", "uptime")
