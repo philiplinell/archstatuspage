@@ -2,6 +2,8 @@
 
 Generates an HTML status page for arch linux systems.
 
+![](./screenshot.png)
+
 ## Waybar example usage
 
 Intended usage is with waybar. 
