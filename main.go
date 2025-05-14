@@ -29,7 +29,7 @@ type SystemStatus struct {
 	LLMPrompt     string // Example prompt for LLMs like Claude
 }
 
-// setupLogger configures the global slog logger based on the provided log level
+// setupLogger configures the global slog logger based on the provided log level.
 func setupLogger(logLevelStr string) {
 	var level slog.Level
 	switch strings.ToLower(logLevelStr) {
@@ -115,8 +115,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating output file: %v", err)
 	}
-	//nolint: errcheck
-	defer outputFile.Close()
 
 	llmPromptIssues := []string{}
 	for _, cmd := range cmds {
@@ -136,9 +134,14 @@ func main() {
 
 	fmt.Printf("System status generated at: %s\n", outputPath)
 	fmt.Printf("View in browser with: xdg-open %s\n", outputPath)
+
+	if err := outputFile.Close(); err != nil {
+		fmt.Printf("Error closing output file: %v\n", err)
+		os.Exit(1)
+	}
 }
 
-// generateLLMPrompt creates an example prompt for an LLM based on the system status
+// generateLLMPrompt creates an example prompt for an LLM based on the system status.
 func generateLLMPrompt(kernel string, issues []string) string {
 	type TmplData struct {
 		Kernel string

@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// ensure interface compliance
+// ensure interface compliance.
 var _ Command = (*CheckUpdates)(nil)
 
 type CheckUpdates struct {
@@ -69,18 +69,22 @@ func (c *CheckUpdates) Run() error {
 			if exitErr.ExitCode() == 2 {
 				// No updates available - not a failure
 				c.output = "No package updates available"
+
 				return nil
 			}
 			// Any other error code is a failure
 			c.failed = true
 			c.output = fmt.Sprintf("Error running checkupdates (code %d): %v",
-				exitErr.ExitCode(), err)
+				exitErr.ExitCode(), err,
+			)
+
 			return err
 		}
 
 		// Generic error handling
 		c.failed = true
 		c.output = fmt.Sprintf("Error running checkupdates: %v", err)
+
 		return err
 	}
 

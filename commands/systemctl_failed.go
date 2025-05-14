@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// ensure interface compliance
+// ensure interface compliance.
 var _ Command = (*SystemctlFailed)(nil)
 
 type SystemctlFailed struct {

@@ -2,7 +2,7 @@ version: "3"
 
 tasks:
   default:
-    cmsd: [task --list]
+    cmds: [task --list]
     silent: true
 
   clean:
@@ -14,3 +14,11 @@ tasks:
     cmds:
       - mkdir -p bin
       - go build -o ./bin ./...
+
+  lint:
+    desc: Lint code
+    cmds: [golangci-lint run]
+
+  fix-lint:
+    desc: Removes lint
+    cmds: [golangci-lint run --fix]
